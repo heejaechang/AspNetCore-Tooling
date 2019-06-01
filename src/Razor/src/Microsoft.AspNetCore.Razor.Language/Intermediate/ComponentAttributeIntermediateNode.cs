@@ -96,6 +96,8 @@ namespace Microsoft.AspNetCore.Razor.Language.Intermediate
 
         public BoundAttributeDescriptor BoundAttribute { get; set; }
 
+        public bool IsAttributeSplat { get; set; }
+
         public string PropertyName { get; set; }
 
         public TagHelperDescriptor TagHelper { get; set; }
@@ -124,6 +126,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Intermediate
             formatter.WriteProperty(nameof(AttributeName), AttributeName);
             formatter.WriteProperty(nameof(AttributeStructure), AttributeStructure.ToString());
             formatter.WriteProperty(nameof(BoundAttribute), BoundAttribute?.DisplayName);
+            formatter.WriteProperty(nameof(IsAttributeSplat), IsAttributeSplat.ToString());
             formatter.WriteProperty(nameof(PropertyName), PropertyName);
             formatter.WriteProperty(nameof(TagHelper), TagHelper?.DisplayName);
             formatter.WriteProperty(nameof(TypeName), TypeName);

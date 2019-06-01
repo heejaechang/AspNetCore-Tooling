@@ -15,6 +15,8 @@ namespace Microsoft.AspNetCore.Razor.Language.Intermediate
 
         public string Suffix { get; set; }
 
+        public bool IsAttributeSplat { get; set; }
+
         public override void Accept(IntermediateNodeVisitor visitor)
         {
             if (visitor == null)
@@ -30,6 +32,7 @@ namespace Microsoft.AspNetCore.Razor.Language.Intermediate
             formatter.WriteContent(AttributeName);
 
             formatter.WriteProperty(nameof(AttributeName), AttributeName);
+            formatter.WriteProperty(nameof(IsAttributeSplat), IsAttributeSplat.ToString());
             formatter.WriteProperty(nameof(Prefix), Prefix);
             formatter.WriteProperty(nameof(Suffix), Suffix);
         }

@@ -132,15 +132,27 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
             var index = 0;
             foreach (var attribute in node.Component.Attributes)
             {
-                context.CodeWriter.WriteStartInstanceMethodInvocation("builder", ComponentsApi.RenderTreeBuilder.AddAttribute);
-                context.CodeWriter.Write(parameters[index].seqName);
-                context.CodeWriter.Write(", ");
+                if (attribute.IsAttributeSplat)
+                {
+                    context.CodeWriter.WriteStartInstanceMethodInvocation("builder", ComponentsApi.RenderTreeBuilder.AddMultipleAttributes);
+                    context.CodeWriter.Write(parameters[index].seqName);
+                    context.CodeWriter.Write(", ");
 
-                context.CodeWriter.Write($"\"{attribute.AttributeName}\"");
-                context.CodeWriter.Write(", ");
+                    context.CodeWriter.Write(parameters[index].parameterName);
+                    context.CodeWriter.WriteEndMethodInvocation();
+                }
+                else
+                {
+                    context.CodeWriter.WriteStartInstanceMethodInvocation("builder", ComponentsApi.RenderTreeBuilder.AddAttribute);
+                    context.CodeWriter.Write(parameters[index].seqName);
+                    context.CodeWriter.Write(", ");
 
-                context.CodeWriter.Write(parameters[index].parameterName);
-                context.CodeWriter.WriteEndMethodInvocation();
+                    context.CodeWriter.Write($"\"{attribute.AttributeName}\"");
+                    context.CodeWriter.Write(", ");
+
+                    context.CodeWriter.Write(parameters[index].parameterName);
+                    context.CodeWriter.WriteEndMethodInvocation();
+                }
 
                 index++;
             }

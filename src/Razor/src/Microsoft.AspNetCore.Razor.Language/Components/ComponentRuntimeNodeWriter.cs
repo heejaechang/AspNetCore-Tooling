@@ -226,7 +226,14 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
             Debug.Assert(_currentAttributeValues.Count == 0);
             context.RenderChildren(node);
 
-            WriteAttribute(context, node.AttributeName, _currentAttributeValues);
+            if (node.IsAttributeSplat)
+            {
+                WriteMultipleAttributes(context, _currentAttributeValues);
+            }
+            else
+            {
+                WriteAttribute(context, node.AttributeName, _currentAttributeValues);
+            }
             _currentAttributeValues.Clear();
         }
 
@@ -467,20 +474,38 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
                 throw new ArgumentNullException(nameof(node));
             }
 
-            // builder.AddAttribute(1, "Foo", 42);
-            context.CodeWriter.Write(_scopeStack.BuilderVarName);
-            context.CodeWriter.Write(".");
-            context.CodeWriter.Write(ComponentsApi.RenderTreeBuilder.AddAttribute);
-            context.CodeWriter.Write("(");
-            context.CodeWriter.Write((_sourceSequence++).ToString());
-            context.CodeWriter.Write(", ");
-            context.CodeWriter.WriteStringLiteral(node.AttributeName);
-            context.CodeWriter.Write(", ");
+            if (node.IsAttributeSplat)
+            {
+                // builder.AddMultipleAttributes(1, myAttributes);
+                context.CodeWriter.Write(_scopeStack.BuilderVarName);
+                context.CodeWriter.Write(".");
+                context.CodeWriter.Write(ComponentsApi.RenderTreeBuilder.AddMultipleAttributes);
+                context.CodeWriter.Write("(");
+                context.CodeWriter.Write((_sourceSequence++).ToString());
+                context.CodeWriter.Write(", ");
 
-            WriteComponentAttributeInnards(context, node, canTypeCheck: true);
+                WriteComponentAttributeInnards(context, node, canTypeCheck: false);
 
-            context.CodeWriter.Write(");");
-            context.CodeWriter.WriteLine();
+                context.CodeWriter.Write(");");
+                context.CodeWriter.WriteLine();
+            }
+            else
+            {
+                // builder.AddAttribute(1, "Foo", 42);
+                context.CodeWriter.Write(_scopeStack.BuilderVarName);
+                context.CodeWriter.Write(".");
+                context.CodeWriter.Write(ComponentsApi.RenderTreeBuilder.AddAttribute);
+                context.CodeWriter.Write("(");
+                context.CodeWriter.Write((_sourceSequence++).ToString());
+                context.CodeWriter.Write(", ");
+                context.CodeWriter.WriteStringLiteral(node.AttributeName);
+                context.CodeWriter.Write(", ");
+
+                WriteComponentAttributeInnards(context, node, canTypeCheck: true);
+
+                context.CodeWriter.Write(");");
+                context.CodeWriter.WriteLine();
+            }
         }
 
         private void WriteComponentAttributeInnards(CodeRenderingContext context, ComponentAttributeIntermediateNode node, bool canTypeCheck)
@@ -751,7 +776,17 @@ namespace Microsoft.AspNetCore.Razor.Language.Components
                 });
             }
         }
-        
+
+        private void WriteMultipleAttributes(CodeRenderingContext context, IList<IntermediateToken> value)
+        {
+            context.CodeWriter
+                .WriteStartMethodInvocation($"{_scopeStack.BuilderVarName}.{ComponentsApi.RenderTreeBuilder.AddMultipleAttributes}")
+                .Write((_sourceSequence++).ToString())
+                .WriteParameterSeparator();
+            WriteAttributeValue(context, value);
+            context.CodeWriter.WriteEndMethodInvocation();
+        }
+
         private void WriteAttribute(CodeRenderingContext context, string key, IList<IntermediateToken> value)
         {
             BeginWriteAttribute(context.CodeWriter, key);
